@@ -5,8 +5,8 @@ import FilterPanel from './components/FilterPanel';
 import AirlineRatingHeatmap from './components/ParallelCoordinates';
 import TimeSeriesAnalysis from './components/TimeSeries';
 import PerformanceDistributionMatrix from './components/PerformanceDistributionMatrix';
-import { 
-  processAirlineData, 
+import {
+  processAirlineData,
   processAirportData,
   processLoungeData,
 } from './utils/dataProcessor';
@@ -19,7 +19,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [focusedView, setFocusedView] = useState(null);
-  const [dimensionFilter, setDimensionFilter] = useState(null); 
+  const [dimensionFilter, setDimensionFilter] = useState(null);
 
   useEffect(() => {
     let loadedCount = 0;
@@ -27,12 +27,14 @@ function App() {
 
     const checkComplete = () => {
       loadedCount++;
-      if (loadedCount === totalFiles) {
-        setLoading(false);
-      }
+      if (loadedCount === totalFiles) setLoading(false);
     };
 
-    Papa.parse('src/data/airline.csv', {
+    // Files placed in: public/data/*.csv
+    // Use BASE_URL so this works under /DVAssignment3/ on GitHub Pages.
+    const csvUrl = (filename) => `${import.meta.env.BASE_URL}data/${filename}`;
+
+    Papa.parse(csvUrl('airline.csv'), {
       download: true,
       header: true,
       complete: (results) => {
@@ -41,16 +43,18 @@ function App() {
           setAirlineData(processed);
         } catch (err) {
           console.error('Airline data error:', err);
+          setError((prev) => prev ?? 'Failed to process airline.csv');
         }
         checkComplete();
       },
       error: (err) => {
         console.error('Airline CSV error:', err);
+        setError((prev) => prev ?? 'Failed to load airline.csv');
         checkComplete();
-      }
+      },
     });
 
-    Papa.parse('src/data/airport.csv', {
+    Papa.parse(csvUrl('airport.csv'), {
       download: true,
       header: true,
       complete: (results) => {
@@ -59,16 +63,18 @@ function App() {
           setAirportData(processed);
         } catch (err) {
           console.error('Airport data error:', err);
+          setError((prev) => prev ?? 'Failed to process airport.csv');
         }
         checkComplete();
       },
       error: (err) => {
         console.error('Airport CSV error:', err);
+        setError((prev) => prev ?? 'Failed to load airport.csv');
         checkComplete();
-      }
+      },
     });
 
-    Papa.parse('src/data/lounge.csv', {
+    Papa.parse(csvUrl('lounge.csv'), {
       download: true,
       header: true,
       complete: (results) => {
@@ -77,19 +83,21 @@ function App() {
           setLoungeData(processed);
         } catch (err) {
           console.error('Lounge data error:', err);
+          setError((prev) => prev ?? 'Failed to process lounge.csv');
         }
         checkComplete();
       },
       error: (err) => {
         console.error('Lounge CSV error:', err);
+        setError((prev) => prev ?? 'Failed to load lounge.csv');
         checkComplete();
-      }
+      },
     });
   }, []);
 
   const handleDimensionFilterChange = (filter) => {
     setDimensionFilter(filter);
-    console.log('Dimension filter changed:', filter); // Debug log
+    console.log('Dimension filter changed:', filter);
   };
 
   const handleBackToOverview = () => {
@@ -98,15 +106,31 @@ function App() {
   };
 
   const handleCardClick = (view, e) => {
-    if (e.target.closest('.cell-group') || e.target.closest('rect[style*="cursor: pointer"]')) {
+    if (
+      e.target.closest('.cell-group') ||
+      e.target.closest('rect[style*="cursor: pointer"]')
+    ) {
       return;
     }
     setFocusedView(view);
   };
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading datasets...</div>;
-  if (error) return <div style={{ padding: '40px', color: 'red' }}>Error: {error}</div>;
-  if (!airlineData || airlineData.length === 0) return <div style={{ padding: '40px' }}>No airline data loaded</div>;
+  if (loading)
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        Loading datasets...
+      </div>
+    );
+
+  if (error)
+    return (
+      <div style={{ padding: '40px', color: 'red' }}>
+        Error: {error}
+      </div>
+    );
+
+  if (!airlineData || airlineData.length === 0)
+    return <div style={{ padding: '40px' }}>No airline data loaded</div>;
 
   return (
     <FilterProvider>
@@ -115,9 +139,13 @@ function App() {
           <div className="header-content">
             <div>
               <h1>SkyTrax Review Explorer</h1>
-              <p>Interactive analysis of {airlineData.length.toLocaleString()} airline, {airportData.length.toLocaleString()} airport, and {loungeData.length.toLocaleString()} lounge reviews.</p>
+              <p>
+                Interactive analysis of {airlineData.length.toLocaleString()} airline,{' '}
+                {airportData.length.toLocaleString()} airport, and{' '}
+                {loungeData.length.toLocaleString()} lounge reviews.
+              </p>
             </div>
-            
+
             {focusedView && (
               <button
                 onClick={handleBackToOverview}
@@ -130,41 +158,38 @@ function App() {
                   border: 'none',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
                 }}
-                onMouseEnter={(e) => e.target.style.background = '#7f8c8d'}
-                onMouseLeave={(e) => e.target.style.background = '#95a5a6'}
+                onMouseEnter={(e) => (e.target.style.background = '#7f8c8d')}
+                onMouseLeave={(e) => (e.target.style.background = '#95a5a6')}
               >
                 ← Back to Overview
               </button>
             )}
           </div>
         </header>
-        
+
         {!focusedView && (
-          <div className="dashboard-grid" style={{ 
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gridTemplateRows: '1fr 1fr'
-          }}>
-            <div 
-              className="dashboard-card"
-              onClick={(e) => handleCardClick('parallel', e)}
-            >
+          <div
+            className="dashboard-grid"
+            style={{
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gridTemplateRows: '1fr 1fr',
+            }}
+          >
+            <div className="dashboard-card" onClick={(e) => handleCardClick('parallel', e)}>
               <div className="card-content">
-                <AirlineRatingHeatmap 
-                  data={airlineData} 
+                <AirlineRatingHeatmap
+                  data={airlineData}
                   dimensionFilter={dimensionFilter}
-                  isPreview={true} 
+                  isPreview={true}
                 />
               </div>
             </div>
 
-            <div 
-              className="dashboard-card"
-              onClick={(e) => handleCardClick('timeseries', e)}
-            >
+            <div className="dashboard-card" onClick={(e) => handleCardClick('timeseries', e)}>
               <div className="card-content">
-                <TimeSeriesAnalysis 
+                <TimeSeriesAnalysis
                   airlineData={airlineData}
                   airportData={airportData}
                   loungeData={loungeData}
@@ -174,8 +199,8 @@ function App() {
               </div>
             </div>
 
-            <div 
-              className="dashboard-card" 
+            <div
+              className="dashboard-card"
               style={{ gridColumn: '1 / -1', position: 'relative', cursor: 'default' }}
             >
               <div className="card-content" style={{ pointerEvents: 'auto' }}>
@@ -195,23 +220,24 @@ function App() {
           <div className="focused-view-container">
             <div className="filter-and-viz">
               {focusedView === 'parallel' && (
-                <FilterPanel 
-                  data={airlineData} 
-                  activeView={focusedView}
-                />
+                <FilterPanel data={airlineData} activeView={focusedView} />
               )}
-              
-              <div className={`main-visualization ${focusedView === 'matrix' || focusedView === 'timeseries' ? 'full-width' : ''}`}>
+
+              <div
+                className={`main-visualization ${
+                  focusedView === 'matrix' || focusedView === 'timeseries' ? 'full-width' : ''
+                }`}
+              >
                 {focusedView === 'parallel' && (
-                  <AirlineRatingHeatmap 
-                    data={airlineData} 
+                  <AirlineRatingHeatmap
+                    data={airlineData}
                     dimensionFilter={dimensionFilter}
-                    isPreview={false} 
+                    isPreview={false}
                   />
                 )}
-                
+
                 {focusedView === 'timeseries' && (
-                  <TimeSeriesAnalysis 
+                  <TimeSeriesAnalysis
                     airlineData={airlineData}
                     airportData={airportData}
                     loungeData={loungeData}
@@ -219,7 +245,7 @@ function App() {
                     isPreview={false}
                   />
                 )}
-                
+
                 {focusedView === 'matrix' && (
                   <PerformanceDistributionMatrix
                     airlineData={airlineData}
