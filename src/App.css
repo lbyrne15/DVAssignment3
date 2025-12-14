@@ -1,0 +1,425 @@
+/* Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Theme */
+:root {
+  --page-bg: #0b1220;
+
+  --card-bg: #ffffff;
+  --card-border: rgba(15, 23, 42, 0.10);
+
+  --text: #0f172a;
+  --muted: #64748b;
+
+  --gap: 14px;
+  --radius: 12px;
+
+  --shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.22);
+  --ring: 0 0 0 3px rgba(59, 130, 246, 0.25);
+
+  /* Fixed header height so we can reserve space in the right panel */
+  --header-h: 92px;
+
+  /* Shared 2-col layout (used by header and dashboard grid so widths match exactly) */
+  --col-left: minmax(0, 1.35fr);
+  --col-right: minmax(0, 1fr);
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  /* Overview should not scroll */
+  overflow: hidden;
+}
+
+/* App shell */
+.App {
+  width: 100vw;
+  height: 100vh;
+  padding: 14px;
+
+  position: relative; /* anchor the absolute header */
+  display: flex;
+  flex-direction: column;
+
+  /* The grid will fill remaining space */
+  overflow: hidden;
+}
+
+/* Header (overlay, right column)*/
+
+header {
+  /* Overlay: does not consume a full-width row */
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  height: var(--header-h);
+  z-index: 50;
+
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+
+  /* Make header align to the same 2 columns as the dashboard */
+  display: grid;
+  grid-template-columns: var(--col-left) var(--col-right);
+  column-gap: var(--gap);
+  align-items: start;
+}
+
+.header-content {
+  grid-column: 2 / 3;
+  height: 100%;
+  width: 100%;
+
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+
+  padding: 14px 18px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.header-content > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+header p {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+header button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* Overview grid (fills viewport)*/
+
+.dashboard-grid {
+  /* Fill the whole app height */
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+
+  /* Start at the very top; header is overlay now */
+  padding-top: 0;
+
+  display: grid;
+  grid-template-columns: var(--col-left) var(--col-right);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--gap);
+
+  overflow: hidden;
+
+  /* Override inline styles set in App.jsx */
+  grid-template-columns: var(--col-left) var(--col-right) !important;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) !important;
+}
+
+/* Cards */
+.dashboard-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+
+  position: relative;
+  overflow: hidden;
+
+  min-width: 0;
+  min-height: 0;
+
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dashboard-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.dashboard-card:focus-within {
+  box-shadow: var(--shadow), var(--ring);
+}
+
+/* Remove hover overlay */
+.card-overlay {
+  display: none !important;
+}
+
+/* Make chart wrappers fill their card */
+.card-content {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+
+  /* allow hover tooltips in preview charts */
+  pointer-events: auto;
+}
+
+/* Place the 3 cards (order in App.jsx: 1 scatter, 2 timeseries, 3 matrix) */
+.dashboard-grid > .dashboard-card:nth-child(1) {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+}
+
+.dashboard-grid > .dashboard-card:nth-child(2) {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+
+/* Right panel spans both rows */
+.dashboard-grid > .dashboard-card:nth-child(3) {
+  grid-column: 2 / 3 !important; /* overrides inline gridColumn: '1 / -1' */
+  grid-row: 1 / 3 !important;
+}
+
+/*
+  Reserve space at the top of the RIGHT panel so the overlaid header
+  does not cover the matrix chart.
+*/
+.dashboard-grid > .dashboard-card:nth-child(3) .card-content {
+  height: calc(100% - var(--header-h) - var(--gap));
+  margin-top: calc(var(--header-h) + var(--gap));
+}
+
+/* Fit left charts better into their boxes (reduce padding so SVG gets more room) */
+.dashboard-grid > .dashboard-card:nth-child(1) .parallel-container,
+.dashboard-grid > .dashboard-card:nth-child(2) .timeseries-container,
+.dashboard-grid > .dashboard-card:nth-child(2) .temporal-container {
+  padding: 8px;
+}
+
+.dashboard-card svg {
+  display: block;
+}
+
+/* Focused view layout*/
+
+.focused-view-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+
+  /* In focused view, the header still overlays; give content a small top padding */
+  padding-top: calc(var(--header-h) + var(--gap));
+}
+
+.filter-and-viz {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: var(--gap);
+}
+
+.filter-and-viz .main-visualization.full-width {
+  grid-column: 1 / -1;
+}
+
+.filter-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+
+  padding: 14px;
+  overflow: auto;
+}
+
+.filter-panel h2 {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.main-visualization {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.parallel-container,
+.map-container,
+.temporal-container,
+.timeseries-container {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+}
+
+.parallel-container h2,
+.map-container h2,
+.temporal-container h2 {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.parallel-container p,
+.map-container p,
+.temporal-container p {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+
+.parallel-container svg,
+.map-container svg,
+.temporal-container svg,
+.timeseries-container svg {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Tooltip */
+.timeseries-tooltip {
+  color: var(--text);
+  background: var(--card-bg);
+  border: 1px solid rgba(15, 23, 42, 0.25);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+/* Scrollbars */
+.filter-panel::-webkit-scrollbar {
+  width: 8px;
+}
+.filter-panel::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+}
+.filter-panel::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+  border-radius: 10px;
+}
+.filter-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+.App.is-overview header {
+  display: grid;
+  grid-template-columns: var(--col-left) var(--col-right);
+}
+
+.App.is-overview .header-content {
+  grid-column: 2 / 3;
+}
+
+.App.is-focused header {
+  display: block;
+}
+
+.App.is-focused .header-content {
+  width: 100%;
+}
+
+/* Responsive fallback */
+@media (max-width: 1100px) {
+  body {
+    overflow: auto;
+  }
+
+  .App {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  header {
+    position: static;
+    height: auto;
+    display: block;
+  }
+
+  .header-content {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .focused-view-container {
+    padding-top: 0;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+    overflow: visible;
+  }
+
+  .dashboard-grid > .dashboard-card:nth-child(1),
+  .dashboard-grid > .dashboard-card:nth-child(2),
+  .dashboard-grid > .dashboard-card:nth-child(3) {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
+  .dashboard-grid > .dashboard-card:nth-child(3) .card-content {
+    height: 100%;
+    margin-top: 0;
+  }
+
+  .filter-and-viz {
+    grid-template-columns: 1fr;
+  }
+}
+
